@@ -1,5 +1,5 @@
 # Weatherapp
 
-**TO Run this app**
-First run Npm install
-then run npm start
+**To Run this app** 
+First run **npm install
+then run **npm start**
