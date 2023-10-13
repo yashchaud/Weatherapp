@@ -1,8 +1,9 @@
-import React,{useState} from 'react'
+import React,{useState,useEffect} from 'react'
 import image from '../Images/rec.png'
 import icons from '../Images/icons8-search.svg'
 import styled from 'styled-components'
 import Back from '../Images/pexels-josh-sorenson-391522.jpg'
+import axios from 'axios'
 
 const Maincomponent = () => {
     
@@ -11,40 +12,52 @@ const Maincomponent = () => {
     const [error, setError] = useState(null);  // State for errors
     const [isCelsius, setIsCelsius] = useState(true);  // State to check if temp is in Celsius
 
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await axios.get(`https://weatherbackend-5k9z.onrender.com/api/products/london`);
+                setWeatherData(response.data);
+            } catch (err) {
+                console.error("Error fetching initial data:", err);
+            }
+        };
+        
+        fetchData();
+    }, []);
+    
+    
     const handleInputChange = (e) => {
         setCity(e.target.value);
     };
     const handleSearch = async () => {
         try {
-            setError(false)
-            const response = await fetch(`http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=953862e849a5e99832321b555b06a2be&units=metric`);
-            const data = await response.json();
-    
-            if (data.cod !== 200) {
-                setError(data.message);
-                setWeatherData(null); // reset the weather data in case of an error
-
+            const response = await axios.get(`https://weatherbackend-5k9z.onrender.com/api/products/${city}`);
+            if (response.data.cod !== 200) {
+                setError(response.data.message);
+                setWeatherData(null);
                 return;
             }
-    
-            setWeatherData(data);
+            setWeatherData(response.data);
+            setError(null);
         } catch (err) {
             setError("Failed to fetch weather data.");
-            setWeatherData(null); // reset the weather data in case of a network issue or similar
-
-        }    };
+            setWeatherData(null);
+        }
+    };
 
         const toggleTemperature = () => {
             setIsCelsius(!isCelsius);
         };
         const getDisplayedTemperature = () => {
-            if (!weatherData) return 'N/A';
-            if (isCelsius) return `${weatherData.main.temp}°C`;
-    
-            // Convert Celsius to Fahrenheit
-            const fahrenheit = (weatherData.main.temp * 9/5) + 32;
-            return `${fahrenheit.toFixed(1)}°F`; // using toFixed(1) to limit to 1 decimal place
+            if (!weatherData || !weatherData.main) return 'N/A';
+            console.log(weatherData.main.temp)
+            const temperature = isCelsius
+                ? `${weatherData.main.temp}°C`
+                : `${((weatherData.main.temp * 9/5) + 32).toFixed(1)}°F`;
+        
+            return temperature;
         };
+        
 
         const weatherDetails = weatherData ? [
             { label: "Humidity", value: `${weatherData.main.humidity}%` },
@@ -181,17 +194,22 @@ const Firstcomp = styled.div`
    }
  `
  const Secondcomp = styled.div`
- width: 30%;
-    padding:2rem;
-    background-color: transparent;
-     position: relative;
+    width: 30%;
+    padding: 2rem;
+    background-color: rgba(4, 4, 4, 0.1); 
+    backdrop-filter: blur(10px);  
+    border-radius: 10px;  
+    box-shadow: 0 4px 6px rgba(182, 182, 182, 0.13);  
+    position: relative;
     z-index: 1;
+    border: 1px solid rgba(255, 255, 255, 0.2);  /* subtle border for the glass effect */
+
     @media  (max-width: 768px) {
-     
         width: 100%;
         padding: 1rem;
     }
-     `
+`;
+
  const Inputdiv = styled.div`
  display: flex;
  justify-content: space-evenly;
@@ -224,4 +242,6 @@ const Firstcomp = styled.div`
   display: flex;
   justify-content: space-between;
   margin-inline: 1rem;
-   `
+  border-bottom: 1px solid rgba(213, 213, 213, 0.252);;
+  margin-bottom: .5rem;
+  `
